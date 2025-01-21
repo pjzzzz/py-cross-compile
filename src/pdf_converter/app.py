@@ -1,5 +1,6 @@
 """PDF to Text converter using pypdf."""
 
+# %%
 import sys
 import tkinter as tk
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any, Final
 from pypdf import PdfReader
 
 
+# %%
 def get_resource_path() -> Path:
     """Get the absolute path to the resources directory.
 
@@ -21,14 +23,16 @@ def get_resource_path() -> Path:
         base_path = Path(sys._MEIPASS)
     else:
         # Normal Python installation
-        base_path = Path(__file__).resolve().parent
+        base_path = Path(__name__).resolve().parent
 
     return base_path / "resources"
 
 
+# %%
 RESOURCE_PATH: Final[Path] = get_resource_path()
 
 
+# %%
 def get_resource_file(filename: str) -> Path:
     """Get path to a specific resource file.
 
@@ -41,6 +45,7 @@ def get_resource_file(filename: str) -> Path:
     return RESOURCE_PATH / filename
 
 
+# %%
 def validate_pdf_file(file_path: str | Path) -> bool:
     """
     Validate if the file is a valid PDF.
@@ -69,6 +74,7 @@ def validate_pdf_file(file_path: str | Path) -> bool:
     return True
 
 
+# %%
 def convert_pdf_to_text(file_path: str | Path) -> str:
     """
     Convert PDF to text.
@@ -86,6 +92,7 @@ def convert_pdf_to_text(file_path: str | Path) -> str:
     return "\n\n".join(text)
 
 
+# %%
 def convert_pdf_thread(
     file_path: str | Path,
     accurate_mode: bool,
@@ -105,6 +112,7 @@ def convert_pdf_thread(
         )
 
 
+# %%
 def conversion_complete(
     text: str,
     status_var: tk.StringVar,
@@ -119,6 +127,7 @@ def conversion_complete(
     ui_elements["progress"].grid_remove()
 
 
+# %%
 def conversion_error(
     error_msg: str,
     status_var: tk.StringVar,
@@ -130,6 +139,7 @@ def conversion_error(
     ui_elements["progress"].grid_remove()
 
 
+# %%
 def save_markdown(
     output_text: ScrolledText,
     status_var: tk.StringVar,
@@ -153,6 +163,7 @@ def save_markdown(
             status_var.set(f"Error saving file: {e}")
 
 
+# %%
 def select_pdf(
     accurate_mode: tk.BooleanVar,
     status_var: tk.StringVar,
@@ -179,6 +190,7 @@ def select_pdf(
             ui_elements["progress"].grid_remove()
 
 
+# %%
 def create_ui() -> tk.Tk:
     """Create and configure the main UI window."""
     root = tk.Tk()
@@ -239,11 +251,13 @@ def create_ui() -> tk.Tk:
     return root
 
 
+# %%
 def main() -> None:
     """Application entry point."""
     root = create_ui()
     root.mainloop()
 
 
+# %%
 if __name__ == "__main__":
     main()

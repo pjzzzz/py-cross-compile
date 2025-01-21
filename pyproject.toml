@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pdf_converter"
 version = "1.0.0"
 description = "GUI application for converting PDF to text with cross-compilation capabilities"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Your Name", email = "your.email@example.com" }]
@@ -19,7 +19,7 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Office/Business",
     "Topic :: Text Processing :: Markup :: Markdown",
     "Typing :: Typed",
@@ -40,7 +40,7 @@ dev = [
     "ruff>=0.7.2",
 
     # Type Checking
-    "mypy>=1.13.0",
+    "pyright>=1.1.0",
 
     # Build & Package
     "pyinstaller>=6.11.0",
@@ -52,6 +52,7 @@ dev = [
 
     # REPL
     "ipython",
+    "matplotlib",
 ]
 
 [project.urls]
@@ -108,7 +109,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
