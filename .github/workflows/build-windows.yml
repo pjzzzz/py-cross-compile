@@ -13,9 +13,54 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-codec2-windows:
+    name: Cross-Compile codec2 for Windows
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout codec2
+        uses: actions/checkout@v4
+        with:
+          repository: aarmono/codec2
+          path: codec2
+      
+      - name: Install MinGW-w64 cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 cmake build-essential
+      
+      - name: Create build directory
+        run: mkdir -p codec2/build_windows
+      
+      - name: Configure CMake for Windows cross-compilation
+        run: |
+          cd codec2/build_windows
+          cmake .. \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+            -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DUNITTEST=FALSE
+      
+      - name: Build codec2
+        run: |
+          cd codec2/build_windows
+          make -j$(nproc)
+      
+      - name: Upload codec2 Windows DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: codec2-windows-dll
+          path: codec2/build_windows/src/*.dll
+          retention-days: 30
+
   build-windows-pyinstaller:
     name: PyInstaller Build (Windows)
     runs-on: windows-latest
+    needs: build-codec2-windows
     strategy:
       matrix:
         python-version: ['3.13']
@@ -24,6 +69,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Download codec2 DLL
+        uses: actions/download-artifact@v3
+        with:
+          name: codec2-windows-dll
+          path: dlls/
       
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -38,7 +89,7 @@ jobs:
       
       - name: Build Windows executable with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --name pdf-converter src/pdf_converter/app.py
+          pyinstaller --onefile --windowed --name pdf-converter --add-data "dlls:dlls" src/pdf_converter/app.py
       
       - name: Upload PyInstaller artifacts
         uses: actions/upload-artifact@v3
@@ -47,7 +98,7 @@ jobs:
           path: dist/
           retention-days: 30
       
-      - name: Create Release (PyInstaller)
+      - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
@@ -88,7 +139,7 @@ jobs:
           path: dist/
           retention-days: 30
       
-      - name: Create Release (macOS)
+      - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
@@ -129,7 +180,7 @@ jobs:
           path: dist/
           retention-days: 30
       
-      - name: Create Release (Linux)
+      - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
