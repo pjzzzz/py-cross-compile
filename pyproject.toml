@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pdf_converter"
-version = "1.0.0"
+version = "1.0.1"
 description = "GUI application for converting PDF to text with cross-compilation capabilities"
 requires-python = ">=3.13"
 readme = "README.md"
