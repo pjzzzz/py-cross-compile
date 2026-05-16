@@ -51,7 +51,7 @@ jobs:
           make -j$(nproc)
       
       - name: Upload codec2 Windows DLL
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: codec2-windows-dll
           path: codec2/build_windows/src/*.dll
@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Download codec2 DLL
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: codec2-windows-dll
           path: dlls/
@@ -92,7 +92,7 @@ jobs:
           pyinstaller --onefile --windowed --name pdf-converter --add-data "dlls:dlls" src/pdf_converter/app.py
       
       - name: Upload PyInstaller artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pyinstaller-windows-py${{ matrix.python-version }}-${{ matrix.arch }}
           path: dist/
@@ -133,7 +133,7 @@ jobs:
           pyinstaller --onefile --name pdf-converter src/pdf_converter/app.py
       
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos-binary-py${{ matrix.python-version }}
           path: dist/
@@ -174,7 +174,7 @@ jobs:
           pyinstaller --onefile --name pdf-converter src/pdf_converter/app.py
       
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-binary-py${{ matrix.python-version }}
           path: dist/
