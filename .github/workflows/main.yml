@@ -1,0 +1,53 @@
+name: Windows Build and Release
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  build-windows:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 cmake make
+
+      - name: Create build directory
+        run: mkdir -p build_windows
+
+      - name: Configure with CMake
+        working-directory: build_windows
+        run: |
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-Ubuntu-mingw32.cmake \
+            -DUNITTEST=FALSE \
+            -DGENERATE_CODEBOOK=OFF
+
+      - name: Build with Make
+        working-directory: build_windows
+        run: make
+
+      - name: Locate built DLL
+        run: |
+          find build_windows -name "*.dll" -type f
+
+      - name: Generate version
+        id: version
+        shell: bash
+        run: echo "version=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Upload Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: build_windows/**/*.dll
+          tag: v${{ steps.version.outputs.version }}
+          overwrite: true
