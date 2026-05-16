@@ -1,1 +1,180 @@
+name: Build Windows Binaries
 
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-windows-pyinstaller:
+    name: PyInstaller Build (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+        arch: ['x86', 'x64']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+      
+      - name: Build Windows executable with PyInstaller
+        run: |
+          pyinstaller --onefile --windowed --name py-cross-compile main.py
+      
+      - name: Upload PyInstaller artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pyinstaller-windows-py${{ matrix.python-version }}-${{ matrix.arch }}
+          path: dist/
+          retention-days: 30
+      
+      - name: Create Release (PyInstaller)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/py-cross-compile.exe
+          tag_name: ${{ github.ref_name }}-pyinstaller
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows-cmake-cross-compile:
+    name: CMake Cross-Compile Build (Ubuntu → Windows)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install MinGW-w64 cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 cmake build-essential
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Create build directory
+        run: |
+          mkdir -p build_windows
+      
+      - name: Configure CMake for Windows cross-compilation
+        run: |
+          cd build_windows
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain-Ubuntu-mingw32.cmake \
+            -DUNITTEST=FALSE \
+            -DCMAKE_BUILD_TYPE=Release
+      
+      - name: Build with CMake
+        run: |
+          cd build_windows
+          make -j$(nproc)
+      
+      - name: Upload CMake cross-compiled artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: cmake-cross-compiled-windows-binary
+          path: build_windows/
+          retention-days: 30
+      
+      - name: Create Release (CMake)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build_windows/**/*.exe
+          tag_name: ${{ github.ref_name }}-cmake
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: Build macOS Binary
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+      
+      - name: Build macOS executable
+        run: |
+          pyinstaller --onefile --name py-cross-compile main.py
+      
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-binary-py${{ matrix.python-version }}
+          path: dist/
+          retention-days: 30
+
+  build-linux:
+    name: Build Linux Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+      
+      - name: Build Linux executable
+        run: |
+          pyinstaller --onefile --name py-cross-compile main.py
+      
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-binary-py${{ matrix.python-version }}
+          path: dist/
+          retention-days: 30
